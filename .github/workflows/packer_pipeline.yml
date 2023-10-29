@@ -24,7 +24,7 @@ jobs:
       - name: Packer Init
         id: packer-init
         if: always() && steps.configure-aws.outcome == 'success'
-        run: packer init .
+        run: packer init aws-base-windows.pkr.hcl
 
       - name: Download bootstrap_win from S3
         id: download-win-bootstrap-file
@@ -35,13 +35,15 @@ jobs:
         id: build-base-image
         if: always() && steps.download-win-bootstrap-file.outcome == 'success'
         timeout-minutes: 15
-        run: packer build \
-          -var "access_key=${{ secrets.AWS_KEY_ID }}" \
-          -var "secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY}}" \
-          -var "instance_type=${{ vars.INSTANCE_TYPE }}" \
-          -var "region=${{ vars.REGION }}" \
-          -var "winrm_password=${{ vars.WINRM_PASSWORD }}" \
-          -var "winrm_username=${{ vars.WINRM_USERNAME }}" aws-base-windows.pkr.hcl
+        run: >
+          packer build
+          -var "access_key=${{ secrets.AWS_KEY_ID }}"
+          -var "secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY}}"
+          -var "instance_type=${{ vars.INSTANCE_TYPE }}"
+          -var "region=${{ vars.REGION }}"
+          -var "winrm_password=${{ secrets.WINRM_PASSWORD }}"
+          -var "winrm_username=${{ vars.WINRM_USERNAME }}"
+          aws-base-windows.pkr.hcl
   
   build-application-image:
     runs-on: ubuntu-latest
@@ -63,7 +65,7 @@ jobs:
       - name: Packer Init
         id: packer-init
         if: always() && steps.configure-aws.outcome == 'success'
-        run: packer init .
+        run: packer init aws-application-windows.pkr.hcl
 
       - name: Download bootstrap_win from S3
         id: download-win-bootstrap-file
@@ -79,10 +81,12 @@ jobs:
         id: build-base-image
         if: always() && steps.download-win-bootstrap-file.outcome == 'success'
         timeout-minutes: 15
-        run: packer build \
-          -var "access_key=${{ secrets.AWS_KEY_ID }}" \
-          -var "secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY}}" \
-          -var "instance_type=${{ vars.INSTANCE_TYPE }}" \
-          -var "region=${{ vars.REGION }}" \
-          -var "winrm_password=${{ vars.WINRM_PASSWORD }}" \
-          -var "winrm_username=${{ vars.WINRM_USERNAME }}" aws-application-windows.pkr.hcl    
+        run: >
+          packer build
+          -var "access_key=${{ secrets.AWS_KEY_ID }}"
+          -var "secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY}}"
+          -var "instance_type=${{ vars.INSTANCE_TYPE }}"
+          -var "region=${{ vars.REGION }}"
+          -var "winrm_password=${{ secrets.WINRM_PASSWORD }}"
+          -var "winrm_username=${{ vars.WINRM_USERNAME }}"
+          aws-application-windows.pkr.hcl    
