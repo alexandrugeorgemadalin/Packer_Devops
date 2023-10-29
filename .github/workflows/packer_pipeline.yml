@@ -1,29 +1,88 @@
-# This is a basic workflow to help you get started with Actions
-
 name: Packer
 
 # Controls when the workflow will run
 on:
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  build-base-image:
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - name: checkout-repo
+        id: checkout-repo
+        uses: actions/checkout@v3
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: Configure AWS Credentials
+        id: configure-aws
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.REGION}}
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+      - name: Packer Init
+        id: packer-init
+        if: always() && steps.configure-aws.outcome == 'success'
+        run: packer init .
+
+      - name: Download bootstrap_win from S3
+        id: download-win-bootstrap-file
+        if: always() && steps.configure-aws.outcome == 'success'
+        run: aws s3 cp s3://${{ vars.AWS_BUCKET }}/bootstrap_win.txt ${{ github.workspace}}
+      
+      - name: Packer build base image
+        id: build-base-image
+        if: always() && steps.download-win-bootstrap-file.outcome == 'success'
+        timeout-minutes: 15
+        run: packer build \
+          -var "access_key=${{ secrets.AWS_KEY_ID }}" \
+          -var "secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY}}" \
+          -var "instance_type=${{ vars.INSTANCE_TYPE }}" \
+          -var "region=${{ vars.REGION }}" \
+          -var "winrm_password=${{ vars.WINRM_PASSWORD }}" \
+          -var "winrm_username=${{ vars.WINRM_USERNAME }}" aws-base-windows.pkr.hcl
+  
+  build-application-image:
+    runs-on: ubuntu-latest
+    needs: build-base-image
+
+    steps:
+      - name: checkout-repo
+        id: checkout-repo
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        id: configure-aws
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.REGION}}
+
+      - name: Packer Init
+        id: packer-init
+        if: always() && steps.configure-aws.outcome == 'success'
+        run: packer init .
+
+      - name: Download bootstrap_win from S3
+        id: download-win-bootstrap-file
+        if: always() && steps.configure-aws.outcome == 'success'
+        run: aws s3 cp s3://${{ vars.AWS_BUCKET }}/bootstrap_win.txt ${{ github.workspace}}
+      
+      - name: Download application package from S3
+        id: download-package
+        if: always() && steps.download-win-bootstrap-file.outcome == 'success'
+        run: aws s3 cp s3://${{ vars.AWS_BUCKET }}/DevopsWebApp.zip ${{ github.workspace}}
+      
+      - name: Packer build application image
+        id: build-base-image
+        if: always() && steps.download-win-bootstrap-file.outcome == 'success'
+        timeout-minutes: 15
+        run: packer build \
+          -var "access_key=${{ secrets.AWS_KEY_ID }}" \
+          -var "secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY}}" \
+          -var "instance_type=${{ vars.INSTANCE_TYPE }}" \
+          -var "region=${{ vars.REGION }}" \
+          -var "winrm_password=${{ vars.WINRM_PASSWORD }}" \
+          -var "winrm_username=${{ vars.WINRM_USERNAME }}" aws-application-windows.pkr.hcl    
