@@ -14,8 +14,8 @@ variable "instance_type" {
 }
 
 variable "instance_count" {
-  description = "Number of EC2 instance to deploy"
-  default = 2
+  description = "Number of EC2 instances to deploy"
+  default = 1
 }
 
 variable "allow_rdp_from_cidrs" {

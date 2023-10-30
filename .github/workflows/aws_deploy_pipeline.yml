@@ -3,6 +3,12 @@ name: AWS EC2 Deploy Pipeline
 # Controls when the workflow will run
 on:
   workflow_dispatch:
+    inputs:
+      instance_count:
+        description: "Number of EC2 instances to deploy"
+        default: 1
+        required: true
+        type: number
 
 jobs:
   deploy-ec2-instances:
@@ -39,10 +45,10 @@ jobs:
         id: terraform-plan
         if: always() && steps.terraform-init.outcome == 'success'
         working-directory:  ${{ github.workspace}}/Terraform
-        run: terraform plan
+        run: terraform plan -var "instance_count=${{ inputs.instance_count }}"
       
       - name: Terraform apply
         id: terraform-apply
         if: always() && steps.terraform-plan.outcome == 'success'
         working-directory:  ${{ github.workspace}}/Terraform
-        run: terraform apply --auto-approve
+        run: terraform apply -var "instance_count=${{ inputs.instance_count }}" --auto-approve
