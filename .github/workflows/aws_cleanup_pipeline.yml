@@ -1,0 +1,42 @@
+name: AWS EC2 Cleanup Pipeline
+
+# Controls when the workflow will run
+on:
+  workflow_dispatch:
+
+jobs:
+  cleanup-ec2-instances:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout-repo
+        id: checkout-repo
+        uses: actions/checkout@v3
+
+      - name: Use Terraform 1.6.2
+        id: configure-terraform
+        if: always() && steps.checkout-repo.outcome == 'success'
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.2
+      
+      - name: Configure AWS Credentials
+        id: configure-aws
+        if: always() && steps.configure-terraform == 'success'
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.REGION}}
+
+      - name: Terraform Init
+        id: terraform-init
+        if: always() && steps.configure-aws.outcome == 'success'
+        working-directory:  ${{ github.workspace}}/Terraform
+        run:  terraform init
+      
+      - name: Terraform Destroy
+        id: terraform-destroy
+        if: always() && steps.terraform-init == 'success'
+        working-directory:  ${{ github.workspace}}/Terraform
+        run: terraform destroy --auto-approve

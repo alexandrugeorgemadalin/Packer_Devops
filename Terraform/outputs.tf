@@ -1,0 +1,10 @@
+output "ip" {
+  value = "${aws_instance.instance[*].public_ip}"
+}
+output "ec2instance" {
+  value = "${aws_instance.instance[*].id}"
+}
+
+output "public_ip" {
+  value = "${aws_instance.instance[*].public_dns}"
+}
