@@ -89,4 +89,4 @@ jobs:
           -var "region=${{ vars.REGION }}"
           -var "winrm_password=${{ secrets.WINRM_PASSWORD }}"
           -var "winrm_username=${{ vars.WINRM_USERNAME }}"
-          aws-application-windows.pkr.hcl    
+          aws-application-windows.pkr.hcl

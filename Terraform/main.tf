@@ -8,7 +8,7 @@ terraform {
 
   backend "s3" {
     bucket = "devops-takehome-bucket"
-    key = "TerraformState/terraform.tfstate"
+    key    = "TerraformState/terraform.tfstate"
     region = "us-east-1"
   }
 }

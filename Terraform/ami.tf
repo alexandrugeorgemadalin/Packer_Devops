@@ -1,20 +1,20 @@
 data "aws_ami" "application-ami" {
-    most_recent = true
-    owners = ["${var.ami_owner}"]
+  most_recent = true
+  owners      = ["${var.ami_owner}"]
 
-    filter {
-        name = "name"
-        values = ["${var.ami_name_filter}"]
-    }
+  filter {
+    name   = "name"
+    values = ["${var.ami_name_filter}"]
+  }
 
-    filter {
-      name   = "root-device-type"
-      values = ["ebs"]
-    }
-    
-    filter {
-      name   = "virtualization-type"
-      values = ["hvm"]
-    }
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
 }
 

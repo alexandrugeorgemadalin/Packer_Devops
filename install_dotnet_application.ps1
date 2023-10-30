@@ -21,6 +21,7 @@ $entryName = "ServicesPipeTimeout"
 # Define the value to assign to the registry entry
 $entryValue = 1572864
 
+# Workaround due to t2.micro performance, had to increase the timeout limit when starting a service
 # Use New-ItemProperty to create the registry entry
 New-ItemProperty -Path $registryPath -Name $entryName -Value $entryValue -PropertyType DWord
 
